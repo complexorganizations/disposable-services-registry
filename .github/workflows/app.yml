@@ -1,9 +1,9 @@
-on:
-name:
+on: [push, pull_request]
+name: ShellCheck
 jobs:
   shellcheck:
-    runs-on:
+    runs-on: ubuntu-latest
     steps:
-    - uses:
-    - name:
-      uses:
+    - uses: actions/checkout@master
+    - name: shellcheck
+      uses: ludeeus/action-shellcheck@master
