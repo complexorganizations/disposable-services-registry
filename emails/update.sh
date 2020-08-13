@@ -28,6 +28,7 @@ dist-check
 function update() {
     # Update begins here
     if ([ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]); then
+        git clean -f && git reset --hard && git checkout master && git pull
         go run main.go
         echo "Please make a pull request."
     fi
