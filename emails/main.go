@@ -18,7 +18,6 @@ func main() {
 		"https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
 		"https://raw.githubusercontent.com/andreis/disposable/master/blacklist.txt",
 		"https://raw.githubusercontent.com/GeroldSetz/emailondeck.com-domains/master/emailondeck.com_domains_from_bdea.cc.txt",
-		"https://block-temporary-email.com/disposable_domain_list.txt",
 		"https://raw.githubusercontent.com/andreis/disposable/master/whitelist.txt",
 		"https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
 	}
