@@ -31,7 +31,7 @@ function dist-check() {
 dist-check
 
 function update() {
-    # Update begins here
+    # shellcheck disable=SC2235
     if ([ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]); then
         git clean -f && git reset --hard && git checkout master && git pull
         go run main.go
