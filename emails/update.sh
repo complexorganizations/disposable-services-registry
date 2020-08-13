@@ -29,6 +29,7 @@ function update() {
     # Update begins here
     if ([ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]); then
         go run main.go
+        echo "Please make a pull request."
     fi
 }
 
