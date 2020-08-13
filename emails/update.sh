@@ -7,6 +7,11 @@ function check-system-requirements() {
         echo "Error: go is not installed, please install go." >&2
         exit
     fi
+    # System requirements (git)
+    if ! [ -x "$(command -v git)" ]; then
+        echo "Error: git is not installed, please install git." >&2
+        exit
+    fi
 }
 
 # Run the function and check for requirements
