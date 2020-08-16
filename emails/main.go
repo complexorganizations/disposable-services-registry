@@ -10,6 +10,13 @@ import (
 	"sync"
 )
 
+/* Tasks
+- Download all the lists;
+- Check for NS and SPF; (must have one to be considered valid)
+- Remove invalid domains
+- Add new domains if found on the list and if it has a NS or SPF
+*/
+
 func main() {
 	urls := []string{
 		"https://gist.githubusercontent.com/adamloving/4401361/raw/66688cf8ad890433b917f3230f44489aa90b03b7",
