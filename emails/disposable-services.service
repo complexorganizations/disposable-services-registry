@@ -1,0 +1,14 @@
+[Unit]
+Description=disposable-services
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/etc/disposable-services/
+ExecStart=/etc/disposable-services/main
+
+[Install]
+WantedBy=multi-user.target
+
+# /lib/systemd/system/disposable-services.service || chmod 755 /lib/systemd/system/disposable-services.service && systemctl daemon-reload && systemctl enable disposable-services && systemctl restart disposable-services && systemctl status disposable-services
