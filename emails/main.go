@@ -283,6 +283,10 @@ var urls = []URLType{
 		Type: "txt",
 	},
 	{
+		URL:  "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",
+		Type: "txt",
+	},
+	{
 		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
 		Type: "json",
 	},
