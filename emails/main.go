@@ -11,10 +11,12 @@ import (
 )
 
 /* Tasks
-- Download all the lists;
-- Check for NS and MX; (must have one to be considered valid)
-- Remove invalid domains
-- Add new domains if found on the list and if it has a NS or MX
+- 1. Download all the list
+- 2. Combine all the list into one.
+- 3. Check and valid if the domain has a NS or a MX record;
+- 4. If the domain has a NS or a MX record than its a valid domain and goes to the output.
+- 5. Add checks to make sure its not added twice.
+- 6. Remove all the original files; don't save anything other than a standard output.
 */
 
 func main() {
@@ -26,6 +28,8 @@ func main() {
 		"https://raw.githubusercontent.com/GeroldSetz/emailondeck.com-domains/master/emailondeck.com_domains_from_bdea.cc.txt",
 		"https://raw.githubusercontent.com/andreis/disposable/master/whitelist.txt",
 		"https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
+		"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
+		"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 	}
 
 	var wg sync.WaitGroup
