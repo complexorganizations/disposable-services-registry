@@ -66,3 +66,18 @@ func main() {
 	wg.Wait()
 	fmt.Println("Done")
 }
+
+// Checking and validating the e-mail domain; validating the domain name.
+func domainCheck(domains map[string]struct{}, email string) bool {
+	nameservers, _ := net.LookupNS(domain)
+	if len(nameservers) > 0 {
+		if err := saveDomainInFile(domain); err != nil {
+			log.Panic(err)
+		}
+
+		domains[domain] = struct{}{}
+		return true
+	}
+
+	return false
+}
