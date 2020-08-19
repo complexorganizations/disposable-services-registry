@@ -14,7 +14,7 @@ import (
 - Download all the lists;
 - Check for NS and MX; (must have one to be considered valid)
 - Remove invalid domains
-- Add new domains if found on the list and if it has a NS or SPF
+- Add new domains if found on the list and if it has a NS or MX
 */
 
 func main() {
