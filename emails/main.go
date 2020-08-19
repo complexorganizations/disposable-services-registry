@@ -275,6 +275,14 @@ var urls = []URLType{
 		Type: "txt",
 	},
 	{
+		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/willwhite/freemail/master/data/disposable.txt",
+		Type: "txt",
+	},
+	{
 		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
 		Type: "json",
 	},
