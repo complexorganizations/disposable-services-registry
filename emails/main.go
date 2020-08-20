@@ -11,9 +11,30 @@ import (
 	"time"
 )
 
+/* Tasks
+- 1. Download all the list
+- 2. Combine all the list into one.
+- 3. Check and valid if the domain has a NS or a MX record;
+- 4. If the domain has a NS or a MX record than its a valid domain and goes to the output.
+- 5. Add checks to make sure its not added twice.
+- 6. Remove all the original files; don't save anything other than a standard output.
+*/
+
+/*
+"https://gist.githubusercontent.com/adamloving/4401361/raw/66688cf8ad890433b917f3230f44489aa90b03b7"
+"https://gist.githubusercontent.com/michenriksen/8710649/raw/d42c080d62279b793f211f0caaffb22f1c980912"
+"https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt"
+"https://raw.githubusercontent.com/andreis/disposable/master/blacklist.txt"
+"https://raw.githubusercontent.com/GeroldSetz/emailondeck.com-domains/master/emailondeck.com_domains_from_bdea.cc.txt"
+"https://raw.githubusercontent.com/andreis/disposable/master/whitelist.txt"
+"https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt"
+"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json"
+"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json"
+*/
+
 const (
-	DownloadWorkers = 50
-	ProcessWorkers  = 100
+	DownloadWorkers = 8
+	ProcessWorkers  = 4
 
 	FileOutputName = "output.txt"
 )
@@ -32,16 +53,26 @@ func main() {
 	fm := NewFileWriterManager()
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
+	chn := make(chan bool, 1)
 
 	go func() {
-		dm.Run(urls)
+		for _, email := range emails {
+			dm.Output() <- email
+		}
+		chn <- true
 		wg.Done()
-		close(dm.Output())
 	}()
 
 	go func() {
-		pm.Run(dm.Output(), emails)
+		dm.Run(urls)
+		_ = <-chn
+		close(dm.Output())
+		wg.Done()
+	}()
+
+	go func() {
+		pm.Run(dm.Output())
 		wg.Done()
 		close(pm.Output())
 	}()
@@ -54,8 +85,8 @@ func main() {
 	wg.Wait()
 }
 
-func ReadEmails() map[string]struct{} {
-	out := make(map[string]struct{})
+func ReadEmails() []string {
+	out := make([]string, 0)
 
 	file, err := os.OpenFile(FileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
@@ -64,10 +95,8 @@ func ReadEmails() map[string]struct{} {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		out[scanner.Text()] = struct{}{}
+		out = append(out, scanner.Text())
 	}
-
-	log.Println(out)
 
 	return out
 }
@@ -172,10 +201,12 @@ func NewProcessManager(workers int) *ProcessManager {
 	}
 }
 
-func (pm *ProcessManager) Run(input chan string, visited map[string]struct{}) {
+func (pm *ProcessManager) Run(input chan string) {
 	wg := sync.WaitGroup{}
 	wg.Add(pm.workers)
 	var mu sync.Mutex
+
+	visited := make(map[string]struct{})
 
 	for i := 0; i < pm.workers; i++ {
 		go func() {
@@ -272,18 +303,6 @@ var urls = []URLType{
 	},
 	{
 		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/willwhite/freemail/master/data/disposable.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",
 		Type: "txt",
 	},
 	{
