@@ -15,7 +15,7 @@ const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
 
-	FileOutputName = "output.txt"
+	FileOutputName = "disposable-email-domains.txt"
 )
 
 var (
