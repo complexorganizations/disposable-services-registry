@@ -259,11 +259,11 @@ func (pm *FileWriterManager) Run(input chan string) {
 
 var urls = []URLType{
 	{
-		URL:  "https://gist.githubusercontent.com/adamloving/4401361/raw/66688cf8ad890433b917f3230f44489aa90b03b7",
+		URL:  "https://www.example.com/index.txt",
 		Type: "txt",
 	},
 	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		URL:  "https://www.example.com/index.json",
 		Type: "json",
 	},
 }
