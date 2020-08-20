@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DownloadWorkers = 50
-	ProcessWorkers  = 100
+	DownloadWorkers = 250
+	ProcessWorkers  = 500
 
 	FileOutputName = "output.txt"
 )
