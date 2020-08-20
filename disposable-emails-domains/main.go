@@ -263,47 +263,7 @@ var urls = []URLType{
 		Type: "txt",
 	},
 	{
-		URL:  "https://gist.githubusercontent.com/michenriksen/8710649/raw/d42c080d62279b793f211f0caaffb22f1c980912",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable/master/blacklist.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/GeroldSetz/emailondeck.com-domains/master/emailondeck.com_domains_from_bdea.cc.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable/master/whitelist.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
-		Type: "json",
-	},
-	{
 		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/willwhite/freemail/master/data/disposable.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",
-		Type: "txt",
 	},
 }
