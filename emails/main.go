@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DownloadWorkers = 250
-	ProcessWorkers  = 500
+	DownloadWorkers = 2500
+	ProcessWorkers  = 5000
 
 	FileOutputName = "output.txt"
 )
@@ -292,16 +292,16 @@ var urls = []URLType{
 		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
 	},
-	{	
-		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",	
-		Type: "txt",	
-	},	
-	{	
-		URL:  "https://raw.githubusercontent.com/willwhite/freemail/master/data/disposable.txt",	
-		Type: "txt",	
-	},	
-	{	
-		URL:  "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",	
-		Type: "txt",	
+	{
+		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/willwhite/freemail/master/data/disposable.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",
+		Type: "txt",
 	},
 }
