@@ -26,6 +26,7 @@ func main() {
 	client.Timeout = 30 * time.Second
 
 	emails := ReadEmails()
+	_ = os.Remove(FileOutputName)
 
 	dm := NewDownloaderManager(DownloadWorkers)
 	pm := NewProcessManager(ProcessWorkers)
@@ -77,6 +78,7 @@ func ReadEmails() []string {
 		out = append(out, scanner.Text())
 	}
 
+	_ = file.Close()
 	return out
 }
 
