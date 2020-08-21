@@ -220,7 +220,7 @@ func (pm *ProcessManager) Output() chan string {
 func ValidateDomain(domain string) bool {
 	mx, _ := net.LookupMX(domain)
 	if len(mx) == 0 {
-		return false
+		return true
 	}
 
 	ns, _ := net.LookupNS(domain)
