@@ -259,11 +259,31 @@ func (pm *FileWriterManager) Run(input chan string) {
 
 var urls = []URLType{
 	{
-		URL:  "https://www.example.com/sample.json",
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
 	},
 	{
-		URL:  "https://www.example.com/sample.txt",
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
+		Type: "json",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/packetstream/disposable-email-domains/master/emails.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
 		Type: "txt",
 	},
 }
