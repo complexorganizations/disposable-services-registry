@@ -259,39 +259,11 @@ func (pm *FileWriterManager) Run(input chan string) {
 
 var urls = []URLType{
 	{
-		URL:  "https://gist.githubusercontent.com/adamloving/4401361/raw/66688cf8ad890433b917f3230f44489aa90b03b7"
-		Type: "txt",
+		URL:  "https://www.example.com/sample.json",
+		Type: "json",
 	},
 	{
-		URL:  "https://gist.githubusercontent.com/michenriksen/8710649/raw/d42c080d62279b793f211f0caaffb22f1c980912"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable/master/blacklist.txt"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/GeroldSetz/emailondeck.com-domains/master/emailondeck.com_domains_from_bdea.cc.txt"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable/master/whitelist.txt"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json"
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json"
+		URL:  "https://www.example.com/sample.txt",
 		Type: "txt",
 	},
 }
