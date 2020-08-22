@@ -286,4 +286,32 @@ var urls = []URLType{
 		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
 		Type: "txt",
 	},
+	{
+		URL:  "https://raw.githubusercontent.com/groundcat/disposable-email-domain-list/master/domains.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/abimaelmartell/goverify/master/list.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/maxmalysh/disposable-emails/master/disposable_emails/data/domains.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/Xyborg/disposable-burner-email-providers/master/disposable-domains.txt",
+		Type: "txt",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/pidario/disposable/master/list/index.json",
+		Type: "json",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		Type: "json",
+	},
+	{
+		URL:  "https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
+		Type: "txt",
+	},
 }
