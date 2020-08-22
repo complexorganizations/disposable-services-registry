@@ -314,8 +314,4 @@ var urls = []URLType{
 		URL: "https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
 		Type: "txt",
 	},
-	{
-		URL: "https://raw.githubusercontent.com/complexorganizations/disposable-services/master/disposable-emails-domains/disposable-email-domains.txt",
-		Type: "txt",
-	},
 }
