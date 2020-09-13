@@ -6,17 +6,13 @@
 
 #### FAQ:
 1. How do i update the list?
-
-`go run main.go`
+- `go run main.go`
 
 2. Can i manually add a list?
-
-yes; Please make a PR
+- yes; Please make a PR
 
 3. Is this Free?
-
-Yes.
+- Yes.
 
 4. How often are the lists updated?
-
-Every 7 days.
+- Every 7 days.
