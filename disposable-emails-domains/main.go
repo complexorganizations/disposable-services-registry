@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sort"
 	"sync"
 	"time"
 )
@@ -19,8 +20,28 @@ const (
 )
 
 var (
-	client = http.DefaultClient
+	client    = http.DefaultClient
+	exclusion []string
 )
+
+func init() {
+	//reading exclusion.txt file
+	file, err := os.Open("exclusions.txt")
+	if err != nil {
+		log.Fatalf("failed to open exclusions.txt")
+
+	}
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		exclusion = append(exclusion, scanner.Text())
+	}
+	file.Close()
+	//sorting the slice for faster binary search
+	sort.Slice(exclusion, func(i, j int) bool {
+		return exclusion[i] <= exclusion[j]
+	})
+}
 
 func main() {
 	client.Timeout = 30 * time.Second
@@ -244,12 +265,16 @@ func (pm *FileWriterManager) Run(input chan string) {
 
 	go func() {
 		for email := range input {
-			_, err := file.WriteString(email + "\n")
-			if err != nil {
-				log.Println(email, err)
+			//search in exclusion
+			if !found(email, exclusion) {
+				_, err := file.WriteString(email + "\n")
+				if err != nil {
+					log.Println(email, err)
+				}
+			} else {
+				log.Println("Found ", email)
 			}
 		}
-
 		wg.Done()
 	}()
 
@@ -257,61 +282,70 @@ func (pm *FileWriterManager) Run(input chan string) {
 	_ = file.Close()
 }
 
+func found(x string, a []string) bool {
+	i := sort.Search(len(a), func(i int) bool { return x <= a[i] })
+	if i < len(a) && a[i] == x {
+		return true
+	} else {
+		return false
+	}
+}
+
 var urls = []URLType{
 	{
-		URL: "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
 		Type: "json",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf",
+		URL:  "https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/packetstream/disposable-email-domains/master/emails.txt",
+		URL:  "https://raw.githubusercontent.com/packetstream/disposable-email-domains/master/emails.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
+		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
+		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
+		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/groundcat/disposable-email-domain-list/master/domains.txt",
+		URL:  "https://raw.githubusercontent.com/groundcat/disposable-email-domain-list/master/domains.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/abimaelmartell/goverify/master/list.txt",
+		URL:  "https://raw.githubusercontent.com/abimaelmartell/goverify/master/list.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/maxmalysh/disposable-emails/master/disposable_emails/data/domains.txt",
+		URL:  "https://raw.githubusercontent.com/maxmalysh/disposable-emails/master/disposable_emails/data/domains.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/Xyborg/disposable-burner-email-providers/master/disposable-domains.txt",
+		URL:  "https://raw.githubusercontent.com/Xyborg/disposable-burner-email-providers/master/disposable-domains.txt",
 		Type: "txt",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/pidario/disposable/master/list/index.json",
+		URL:  "https://raw.githubusercontent.com/pidario/disposable/master/list/index.json",
 		Type: "json",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
 	},
 	{
-		URL: "https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
+		URL:  "https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
 		Type: "txt",
 	},
 }
