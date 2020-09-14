@@ -16,7 +16,8 @@ const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
 
-	FileOutputName = "disposable-email-domains.txt"
+	FileOutputName    = "disposable-email-domains.txt"
+	exclusionsDomains = "exclusions.txt"
 )
 
 var (
@@ -26,7 +27,7 @@ var (
 
 func init() {
 	//reading exclusion.txt file
-	file, err := os.Open("exclusions.txt")
+	file, err := os.Open(exclusionsDomains)
 	if err != nil {
 		log.Fatalf("failed to open exclusions.txt")
 
