@@ -16,7 +16,7 @@ const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
 
-	FileOutputName    = "disposable-email-domains.txt"
+	FileOutputName    = "disposable-emails-domains.txt"
 	exclusionsDomains = "exclusions.txt"
 )
 
