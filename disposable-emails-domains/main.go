@@ -15,7 +15,6 @@ import (
 const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
-
 	FileOutputName    = "disposable-emails-domains.txt"
 	exclusionsDomains = "exclusions.txt"
 )
