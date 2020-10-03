@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
+var (
+	client    = http.DefaultClient
+	exclusion []string
+)
+
 const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
 	FileOutputName    = "disposable.txt"
 	exclusionsDomains = "exclusions.txt"
-)
-
-var (
-	client    = http.DefaultClient
-	exclusion []string
 )
 
 func init() {
