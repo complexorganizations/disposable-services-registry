@@ -45,12 +45,12 @@ func init() {
 func main() {
 	client.Timeout = 30 * time.Second
 
-	emails := ReadEmails()
+	emails := readEmails()
 	_ = os.Remove(FileOutputName)
 
-	dm := NewDownloaderManager(DownloadWorkers)
-	pm := NewProcessManager(ProcessWorkers)
-	fm := NewFileWriterManager()
+	dm := newDownloaderManager(DownloadWorkers)
+	pm := newProcessManager(ProcessWorkers)
+	fm := newFileWriterManager()
 
 	var wg sync.WaitGroup
 	wg.Add(4)
@@ -85,7 +85,7 @@ func main() {
 	wg.Wait()
 }
 
-func ReadEmails() []string {
+func readEmails() []string {
 	out := make([]string, 0)
 
 	file, err := os.OpenFile(FileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
@@ -112,7 +112,7 @@ type DownloadManager struct {
 	emailOutput chan string
 }
 
-func NewDownloaderManager(workers int) *DownloadManager {
+func newDownloaderManager(workers int) *DownloadManager {
 	return &DownloadManager{
 		workers:     workers,
 		emailOutput: make(chan string, 50),
@@ -140,9 +140,9 @@ func (dm *DownloadManager) Run(urls []URLType) {
 
 				switch urlType.Type {
 				case "txt":
-					emails = DownloadTextEmails(urlType.URL)
+					emails = downloadTextEmails(urlType.URL)
 				case "json":
-					emails = DownloadJsonEmails(urlType.URL)
+					emails = downloadJsonEmails(urlType.URL)
 				}
 
 				for _, email := range emails {
@@ -161,7 +161,7 @@ func (dm *DownloadManager) Output() chan string {
 	return dm.emailOutput
 }
 
-func DownloadTextEmails(url string) []string {
+func downloadTextEmails(url string) []string {
 	resp, err := client.Get(url)
 	if err != nil {
 		return make([]string, 0)
@@ -179,7 +179,7 @@ func DownloadTextEmails(url string) []string {
 	return out
 }
 
-func DownloadJsonEmails(url string) []string {
+func downloadJsonEmails(url string) []string {
 	resp, err := client.Get(url)
 	if err != nil {
 		return make([]string, 0)
@@ -195,7 +195,7 @@ type ProcessManager struct {
 	output  chan string
 }
 
-func NewProcessManager(workers int) *ProcessManager {
+func newProcessManager(workers int) *ProcessManager {
 	return &ProcessManager{
 		workers: workers,
 		output:  make(chan string, 50),
@@ -221,7 +221,7 @@ func (pm *ProcessManager) Run(input chan string) {
 				visited[email] = struct{}{}
 				mu.Unlock()
 
-				if ValidateDomain(email) {
+				if validateDomain(email) {
 					pm.output <- email
 				}
 			}
@@ -237,7 +237,7 @@ func (pm *ProcessManager) Output() chan string {
 	return pm.output
 }
 
-func ValidateDomain(domain string) bool {
+func validateDomain(domain string) bool {
 	mx, _ := net.LookupMX(domain)
 	if len(mx) == 0 {
 		return true
@@ -249,7 +249,7 @@ func ValidateDomain(domain string) bool {
 
 type FileWriterManager struct{}
 
-func NewFileWriterManager() *FileWriterManager {
+func newFileWriterManager() *FileWriterManager {
 	return &FileWriterManager{}
 }
 
