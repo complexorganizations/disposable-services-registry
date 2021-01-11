@@ -15,9 +15,5 @@ jobs:
         uses: actions/checkout@v1
       - name: Get dependencies
         run: go get -v
-      - name: Run Test
-        run: go run .
       - name: Build Test
         run: go build -v .
-      - name: Run the build
-        run: ./disposable-services
