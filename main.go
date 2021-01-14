@@ -10,6 +10,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"golang.org/x/net/publicsuffix"
 )
 
 var (
