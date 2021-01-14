@@ -44,18 +44,14 @@ func init() {
 
 func main() {
 	client.Timeout = 30 * time.Second
-
 	emails := ReadEmails()
 	_ = os.Remove(FileOutputName)
-
 	dm := NewDownloaderManager(DownloadWorkers)
 	pm := NewProcessManager(ProcessWorkers)
 	fm := NewFileWriterManager()
-
 	var wg sync.WaitGroup
 	wg.Add(4)
 	chn := make(chan bool, 1)
-
 	go func() {
 		for _, email := range emails {
 			dm.Output() <- email
@@ -63,41 +59,34 @@ func main() {
 		chn <- true
 		wg.Done()
 	}()
-
 	go func() {
 		dm.Run(urls)
 		_ = <-chn
 		close(dm.Output())
 		wg.Done()
 	}()
-
 	go func() {
 		pm.Run(dm.Output())
 		wg.Done()
 		close(pm.Output())
 	}()
-
 	go func() {
 		fm.Run(pm.Output())
 		wg.Done()
 	}()
-
 	wg.Wait()
 }
 
 func ReadEmails() []string {
 	out := make([]string, 0)
-
 	file, err := os.OpenFile(FileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return out
 	}
-
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		out = append(out, scanner.Text())
 	}
-
 	_ = file.Close()
 	return out
 }
@@ -123,7 +112,6 @@ func (dm *DownloadManager) Run(urls []URLType) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	urlsInput := make(chan URLType, 10)
-
 	go func() {
 		for _, urlType := range urls {
 			urlsInput <- urlType
@@ -132,19 +120,16 @@ func (dm *DownloadManager) Run(urls []URLType) {
 
 		wg.Done()
 	}()
-
 	for i := 0; i < dm.workers; i++ {
 		go func() {
 			for urlType := range urlsInput {
 				var emails []string
-
 				switch urlType.Type {
 				case "txt":
 					emails = DownloadTextEmails(urlType.URL)
 				case "json":
 					emails = DownloadJsonEmails(urlType.URL)
 				}
-
 				for _, email := range emails {
 					dm.emailOutput <- email
 				}
@@ -153,7 +138,6 @@ func (dm *DownloadManager) Run(urls []URLType) {
 			}
 		}()
 	}
-
 	wg.Wait()
 }
 
@@ -166,16 +150,12 @@ func DownloadTextEmails(url string) []string {
 	if err != nil {
 		return make([]string, 0)
 	}
-
 	out := make([]string, 0)
-
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		out = append(out, scanner.Text())
 	}
-
 	_ = resp.Body.Close()
-
 	return out
 }
 
@@ -184,7 +164,6 @@ func DownloadJsonEmails(url string) []string {
 	if err != nil {
 		return make([]string, 0)
 	}
-
 	out := make([]string, 0)
 	_ = json.NewDecoder(resp.Body).Decode(&out)
 	return out
@@ -206,9 +185,7 @@ func (pm *ProcessManager) Run(input chan string) {
 	wg := sync.WaitGroup{}
 	wg.Add(pm.workers)
 	var mu sync.Mutex
-
 	visited := make(map[string]struct{})
-
 	for i := 0; i < pm.workers; i++ {
 		go func() {
 			for email := range input {
@@ -225,11 +202,9 @@ func (pm *ProcessManager) Run(input chan string) {
 					pm.output <- email
 				}
 			}
-
 			wg.Done()
 		}()
 	}
-
 	wg.Wait()
 }
 
@@ -242,7 +217,6 @@ func ValidateDomain(domain string) bool {
 	if len(mx) == 0 {
 		return true
 	}
-
 	ns, _ := net.LookupNS(domain)
 	return len(ns) != 0
 }
@@ -258,10 +232,8 @@ func (pm *FileWriterManager) Run(input chan string) {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-
 	go func() {
 		for email := range input {
 			//search in exclusion
@@ -276,7 +248,6 @@ func (pm *FileWriterManager) Run(input chan string) {
 		}
 		wg.Done()
 	}()
-
 	wg.Wait()
 	_ = file.Close()
 }
