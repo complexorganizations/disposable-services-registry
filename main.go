@@ -118,7 +118,6 @@ func (dm *DownloadManager) Run(urls []URLType) {
 			urlsInput <- urlType
 			wg.Add(1)
 		}
-
 		wg.Done()
 	}()
 	for i := 0; i < dm.workers; i++ {
@@ -134,7 +133,6 @@ func (dm *DownloadManager) Run(urls []URLType) {
 				for _, email := range emails {
 					dm.emailOutput <- email
 				}
-
 				wg.Done()
 			}
 		}()
@@ -198,7 +196,6 @@ func (pm *ProcessManager) Run(input chan string) {
 				}
 				visited[email] = struct{}{}
 				mu.Unlock()
-
 				if ValidateDomain(email) {
 					pm.output <- email
 				}
