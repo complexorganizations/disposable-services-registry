@@ -29,7 +29,7 @@ func init() {
 	//reading exclusion.txt file
 	file, err := os.Open(exclusionsDomains)
 	if err != nil {
-		log.Fatalf("failed to open exclusions.txt")
+		log.Fatalf("failed to open", exclusionsDomains)
 	}
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
