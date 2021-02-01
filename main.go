@@ -25,8 +25,8 @@ const (
 	exclusionsDomains = "configs/exclusions.txt"
 )
 
+// Reading exclusion.txt file
 func init() {
-	//reading exclusion.txt file
 	file, err := os.Open(exclusionsDomains)
 	if err != nil {
 		log.Fatalf("failed to open", exclusionsDomains)
