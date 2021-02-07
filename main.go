@@ -36,7 +36,6 @@ func init() {
 		exclusion = append(exclusion, scanner.Text())
 	}
 	file.Close()
-	//sorting the slice for faster binary search
 	sort.Slice(exclusion, func(i, j int) bool {
 		return exclusion[i] <= exclusion[j]
 	})
