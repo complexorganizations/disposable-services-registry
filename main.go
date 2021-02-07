@@ -24,7 +24,6 @@ const (
 	exclusionsDomains = "assets/exclusions.txt"
 )
 
-// Reading exclusion.txt file
 func init() {
 	file, err := os.Open(exclusionsDomains)
 	if err != nil {
@@ -232,7 +231,6 @@ func (pm *FileWriterManager) Run(input chan string) {
 	wg.Add(1)
 	go func() {
 		for email := range input {
-			//search in exclusion
 			if !found(email, exclusion) {
 				_, err := file.WriteString(email + "\n")
 				if err != nil {
