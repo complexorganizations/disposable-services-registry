@@ -20,8 +20,8 @@ var (
 const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
-	FileOutputName    = "configs/disposable.txt"
-	exclusionsDomains = "configs/exclusions.txt"
+	FileOutputName    = "assets/disposable.txt"
+	exclusionsDomains = "assets/exclusions.txt"
 )
 
 // Reading exclusion.txt file
