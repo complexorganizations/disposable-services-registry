@@ -20,8 +20,8 @@ var (
 const (
 	DownloadWorkers = 2500
 	ProcessWorkers  = 5000
-	FileOutputName    = "assets/disposable.txt"
-	exclusionsDomains = "assets/exclusions.txt"
+	FileOutputName    = "assets/disposable-domains.txt"
+	exclusionsDomains = "assets/exclusions-domains.txt"
 )
 
 func init() {
