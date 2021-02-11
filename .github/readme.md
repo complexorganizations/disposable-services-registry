@@ -1,10 +1,21 @@
 ## Disposable Services
 
+### Features:
 - Provides a list of disposable emails providers. (Validates [NS|MX] Records)
 - Provides a list of disposable phone numbers. (soon)
 - Provides a list of disposable ___
 
-#### FAQ:
+### Lists:
+Domains:
+```
+https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-domains.txt
+```
+Telephone number:
+```
+https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-telephone-numbers.txt
+```
+
+### FAQ:
 1. How do i update the list?
 - `go run main.go`
 
