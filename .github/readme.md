@@ -10,7 +10,7 @@ Domains:
 ```
 https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-domains.txt
 ```
-Telephone number:
+Telephone numbers:
 ```
 https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-telephone-numbers.txt
 ```
