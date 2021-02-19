@@ -48,3 +48,18 @@ function installing-system-requirements() {
 
 # Run the function and check for requirements
 installing-system-requirements
+
+function auto-update-every-day() {
+  if [ ! -f "$GLOBAL_VARIABLES" ]; then
+    echo "[Unit]
+Description= Disposable Services Registry
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/
+
+[Install]
+WantedBy=multi-user.target" >> $GLOBAL_VARIABLES
+  fi
+}
