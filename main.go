@@ -18,16 +18,16 @@ var (
 )
 
 const (
-	DownloadWorkers = 2500
-	ProcessWorkers  = 5000
-	FileOutputName    = "assets/disposable-domains.txt"
+	downloadWorkers   = 2500
+	processWorkers    = 5000
+	fileOutputName    = "assets/disposable-domains.txt"
 	exclusionsDomains = "assets/exclusions-domains.txt"
 )
 
 func init() {
 	file, err := os.Open(exclusionsDomains)
 	if err != nil {
-		log.Fatalf("failed to open", exclusionsDomains)
+		log.Fatal("failed to open", exclusionsDomains)
 	}
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
@@ -42,11 +42,11 @@ func init() {
 
 func main() {
 	client.Timeout = 30 * time.Second
-	emails := ReadEmails()
-	_ = os.Remove(FileOutputName)
-	dm := NewDownloaderManager(DownloadWorkers)
-	pm := NewProcessManager(ProcessWorkers)
-	fm := NewFileWriterManager()
+	emails := readEmails()
+	_ = os.Remove(fileOutputName)
+	dm := newDownloaderManager(downloadWorkers)
+	pm := newProcessManager(processWorkers)
+	fm := newfileWriterManager()
 	var wg sync.WaitGroup
 	wg.Add(4)
 	chn := make(chan bool, 1)
@@ -75,9 +75,9 @@ func main() {
 	wg.Wait()
 }
 
-func ReadEmails() []string {
+func readEmails() []string {
 	out := make([]string, 0)
-	file, err := os.OpenFile(FileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
+	file, err := os.OpenFile(fileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return out
 	}
@@ -89,43 +89,43 @@ func ReadEmails() []string {
 	return out
 }
 
-type URLType struct {
+type typeURL struct {
 	URL  string
 	Type string
 }
 
-type DownloadManager struct {
+type downloadManager struct {
 	workers     int
 	emailOutput chan string
 }
 
-func NewDownloaderManager(workers int) *DownloadManager {
-	return &DownloadManager{
+func newDownloaderManager(workers int) *downloadManager {
+	return &downloadManager{
 		workers:     workers,
 		emailOutput: make(chan string, 50),
 	}
 }
 
-func (dm *DownloadManager) Run(urls []URLType) {
+func (dm *downloadManager) Run(urls []typeURL) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	urlsInput := make(chan URLType, 10)
+	urlsInput := make(chan typeURL, 10)
 	go func() {
-		for _, urlType := range urls {
-			urlsInput <- urlType
+		for _, typeURL := range urls {
+			urlsInput <- typeURL
 			wg.Add(1)
 		}
 		wg.Done()
 	}()
 	for i := 0; i < dm.workers; i++ {
 		go func() {
-			for urlType := range urlsInput {
+			for typeURL := range urlsInput {
 				var emails []string
-				switch urlType.Type {
+				switch typeURL.Type {
 				case "txt":
-					emails = DownloadTextEmails(urlType.URL)
+					emails = downloadTextEmails(typeURL.URL)
 				case "json":
-					emails = DownloadJsonEmails(urlType.URL)
+					emails = downloadJSONEmails(typeURL.URL)
 				}
 				for _, email := range emails {
 					dm.emailOutput <- email
@@ -137,11 +137,11 @@ func (dm *DownloadManager) Run(urls []URLType) {
 	wg.Wait()
 }
 
-func (dm *DownloadManager) Output() chan string {
+func (dm *downloadManager) Output() chan string {
 	return dm.emailOutput
 }
 
-func DownloadTextEmails(url string) []string {
+func downloadTextEmails(url string) []string {
 	resp, err := client.Get(url)
 	if err != nil {
 		return make([]string, 0)
@@ -155,7 +155,7 @@ func DownloadTextEmails(url string) []string {
 	return out
 }
 
-func DownloadJsonEmails(url string) []string {
+func downloadJSONEmails(url string) []string {
 	resp, err := client.Get(url)
 	if err != nil {
 		return make([]string, 0)
@@ -165,19 +165,19 @@ func DownloadJsonEmails(url string) []string {
 	return out
 }
 
-type ProcessManager struct {
+type processManager struct {
 	workers int
 	output  chan string
 }
 
-func NewProcessManager(workers int) *ProcessManager {
-	return &ProcessManager{
+func newProcessManager(workers int) *processManager {
+	return &processManager{
 		workers: workers,
 		output:  make(chan string, 50),
 	}
 }
 
-func (pm *ProcessManager) Run(input chan string) {
+func (pm *processManager) Run(input chan string) {
 	wg := sync.WaitGroup{}
 	wg.Add(pm.workers)
 	var mu sync.Mutex
@@ -193,7 +193,7 @@ func (pm *ProcessManager) Run(input chan string) {
 				}
 				visited[email] = struct{}{}
 				mu.Unlock()
-				if ValidateDomain(email) {
+				if validateDomain(email) {
 					pm.output <- email
 				}
 			}
@@ -203,11 +203,11 @@ func (pm *ProcessManager) Run(input chan string) {
 	wg.Wait()
 }
 
-func (pm *ProcessManager) Output() chan string {
+func (pm *processManager) Output() chan string {
 	return pm.output
 }
 
-func ValidateDomain(domain string) bool {
+func validateDomain(domain string) bool {
 	mx, _ := net.LookupMX(domain)
 	if len(mx) == 0 {
 		return true
@@ -216,14 +216,14 @@ func ValidateDomain(domain string) bool {
 	return len(ns) != 0
 }
 
-type FileWriterManager struct{}
+type fileWriterManager struct{}
 
-func NewFileWriterManager() *FileWriterManager {
-	return &FileWriterManager{}
+func newfileWriterManager() *fileWriterManager {
+	return &fileWriterManager{}
 }
 
-func (pm *FileWriterManager) Run(input chan string) {
-	file, err := os.OpenFile(FileOutputName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+func (pm *fileWriterManager) Run(input chan string) {
+	file, err := os.OpenFile(fileOutputName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -250,12 +250,11 @@ func found(x string, a []string) bool {
 	i := sort.Search(len(a), func(i int) bool { return x <= a[i] })
 	if i < len(a) && a[i] == x {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
-var urls = []URLType{
+var urls = []typeURL{
 	{
 		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
 		Type: "json",
