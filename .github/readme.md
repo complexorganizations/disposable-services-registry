@@ -8,11 +8,11 @@
 ### Lists:
 Domains:
 ```
-https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-domains.txt
+https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-domains.txt
 ```
 Telephone numbers:
 ```
-https://raw.githubusercontent.com/complexorganizations/disposable-services/main/assets/disposable-telephone-numbers.txt
+https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-telephone-numbers.txt
 ```
 
 ### FAQ:
