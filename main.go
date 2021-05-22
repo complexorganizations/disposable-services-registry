@@ -208,12 +208,11 @@ func (pm *processManager) Output() chan string {
 }
 
 func validateDomain(domain string) bool {
-	mx, _ := net.LookupMX(domain)
-	if len(mx) == 0 {
-		return true
-	}
 	ns, _ := net.LookupNS(domain)
-	return len(ns) != 0
+	if len(ns) < 1 {
+		return false
+	}
+	return true
 }
 
 type fileWriterManager struct{}
