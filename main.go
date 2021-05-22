@@ -18,8 +18,8 @@ var (
 )
 
 const (
-	downloadWorkers   = 25
-	processWorkers    = 50
+	downloadWorkers   = 5
+	processWorkers    = 10
 	fileOutputName    = "assets/disposable-domains.txt"
 	exclusionsDomains = "assets/exclusions-domains.txt"
 )
