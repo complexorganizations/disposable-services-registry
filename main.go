@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -73,6 +74,8 @@ func main() {
 		wg.Done()
 	}()
 	wg.Wait()
+	// Remove www
+	removeWWW()
 }
 
 func readEmails() []string {
@@ -209,10 +212,7 @@ func (pm *processManager) Output() chan string {
 
 func validateDomain(domain string) bool {
 	ns, _ := net.LookupNS(domain)
-	if len(ns) < 1 {
-		return false
-	}
-	return true
+	return len(ns) >= 1
 }
 
 type fileWriterManager struct{}
@@ -251,6 +251,18 @@ func found(x string, a []string) bool {
 		return true
 	}
 	return false
+}
+
+func removeWWW() {
+	read, err := os.ReadFile(fileOutputName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	newContents := strings.Replace(string(read), ("www."), (""), -1)
+	err = os.WriteFile(fileOutputName, []byte(newContents), 0)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 var urls = []typeURL{
