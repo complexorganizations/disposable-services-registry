@@ -17,14 +17,8 @@ https://raw.githubusercontent.com/complexorganizations/disposable-services-regis
 ```
 
 ### FAQ:
-How do i update the list?
-- `go run main.go`
+How frequently are the listings updated?
+Using github actions, the lists are updated on a daily basis.
 
-Can i manually add a list?
-- yes; Please make a PR
-
-Is this Free?
-- Yes.
-
-How often are the lists updated?
-- Every day
+Is it possible for me to upload a list that I discovered?
+Please submit a PR to add a new list; if you're wondering, all lists must be public in order to be scraped.- Yes.
