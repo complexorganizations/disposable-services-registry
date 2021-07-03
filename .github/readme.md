@@ -1,5 +1,7 @@
 ## Disposable Services
 
+Note: The current code is garbage and will be rewritten by July 9 2021
+
 ### Features:
 - Provides a list of disposable emails providers. (Validates [NS|MX] Records)
 - Provides a list of disposable phone numbers. (soon)
