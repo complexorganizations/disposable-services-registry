@@ -2,309 +2,400 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
+	"bytes"
+	"flag"
+	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"regexp"
+	"runtime/debug"
 	"sort"
+	"strings"
 	"sync"
-	"time"
+
+	"github.com/openrdap/rdap"
+	"golang.org/x/net/publicsuffix"
 )
 
 var (
-	client    = http.DefaultClient
-	exclusion []string
-)
-
-const (
-	downloadWorkers   = 5
-	processWorkers    = 10
-	fileOutputName    = "assets/disposable-domains.txt"
-	exclusionsDomains = "assets/exclusions-domains.txt"
+	// Location of the configuration in the local system path
+	disposableDomains          = "assets/disposable-domains"
+	exclusionsDomains          = "assets/exclusions-domains"
+	disposableTelephoneNumbers = "assets/disposable-telephone-numbers"
+	exclusionsTelephoneNumbers = "assets/exclusions-telephone-numbers"
+	// Memorandum with a domain list.
+	disposableDomainsArray          []string
+	exclusionsDomainsArray          []string
+	disposableTelephoneNumbersArray []string
+	exclusionsTelephoneNumbersArray []string
+	// Go routines using waitgrops.
+	scrapeWaitGroup     sync.WaitGroup
+	validationWaitGroup sync.WaitGroup
+	// The user expresses his or her opinion on what should be done.
+	showLogs bool
+	update   bool
+	// err stands for error.
+	err error
 )
 
 func init() {
-	file, err := os.Open(exclusionsDomains)
-	if err != nil {
-		log.Fatal("failed to open", exclusionsDomains)
+	// If any user input flags are provided, use them.
+	if len(os.Args) > 1 {
+		tempUpdate := flag.Bool("update", false, "Make any necessary changes to the listings.")
+		tempLog := flag.Bool("logs", false, "Check the weather before deciding whether or not to display logs.")
+		flag.Parse()
+		update = *tempUpdate
+		showLogs = *tempLog
+	} else {
+		os.Exit(0)
 	}
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		exclusion = append(exclusion, scanner.Text())
-	}
-	file.Close()
-	sort.Slice(exclusion, func(i, j int) bool {
-		return exclusion[i] <= exclusion[j]
-	})
 }
 
 func main() {
-	client.Timeout = 30 * time.Second
-	emails := readEmails()
-	_ = os.Remove(fileOutputName)
-	dm := newDownloaderManager(downloadWorkers)
-	pm := newProcessManager(processWorkers)
-	fm := newfileWriterManager()
-	var wg sync.WaitGroup
-	wg.Add(4)
-	chn := make(chan bool, 1)
-	go func() {
-		for _, email := range emails {
-			dm.Output() <- email
+	// Lists should be updated.
+	if update {
+		// Clear your memories as much as possible
+		os.RemoveAll(os.TempDir())
+		os.Mkdir(os.TempDir(), 0777)
+		debug.FreeOSMemory()
+		// Max ammount of go routines
+		debug.SetMaxThreads(10000)
+		// Remove the old files from your system if they are found.
+		err = os.Remove(disposableDomains)
+		if err != nil {
+			log.Println(err)
 		}
-		chn <- true
-		wg.Done()
-	}()
-	go func() {
-		dm.Run(urls)
-		_ = <-chn
-		close(dm.Output())
-		wg.Done()
-	}()
-	go func() {
-		pm.Run(dm.Output())
-		wg.Done()
-		close(pm.Output())
-	}()
-	go func() {
-		fm.Run(pm.Output())
-		wg.Done()
-	}()
-	wg.Wait()
+		err = os.Remove(disposableTelephoneNumbers)
+		if err != nil {
+			log.Println(err)
+		}
+		// Read through all of the exclusion domains before appending them.
+		if fileExists(exclusionsDomains) {
+			exclusionsDomainsArray = readAndAppend(exclusionsDomains, exclusionsDomainsArray)
+		}
+		if fileExists(exclusionsTelephoneNumbers) {
+			exclusionsTelephoneNumbersArray = readAndAppend(exclusionsTelephoneNumbers, exclusionsTelephoneNumbersArray)
+		}
+		// Scrape all of the domains and save them afterwards.
+		startScraping()
+		// We'll make everything distinctive once everything is finished.
+		makeEverythingUnique(disposableDomains)
+		makeEverythingUnique(disposableTelephoneNumbers)
+	}
 }
 
-func readEmails() []string {
-	out := make([]string, 0)
-	file, err := os.OpenFile(fileOutputName, os.O_CREATE|os.O_RDONLY|os.O_APPEND, os.ModePerm)
-	if err != nil {
-		return out
+// Replace the URLs in this section to create your own list or add new lists.
+func startScraping() {
+	// Disposable Domains
+	domainsLists := []string{
+		"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
+		"https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf",
+		"https://raw.githubusercontent.com/packetstream/disposable-email-domains/master/emails.txt",
+		"https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
+		"https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
+		"https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
+		"https://raw.githubusercontent.com/groundcat/disposable-email-domain-list/master/domains.txt",
+		"https://raw.githubusercontent.com/abimaelmartell/goverify/master/list.txt",
+		"https://raw.githubusercontent.com/maxmalysh/disposable-emails/master/disposable_emails/data/domains.txt",
+		"https://raw.githubusercontent.com/Xyborg/disposable-burner-email-providers/master/disposable-domains.txt",
+		"https://raw.githubusercontent.com/pidario/disposable/master/list/index.json",
+		"https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+		"https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
 	}
+	// Phone Numbers
+	phoneNumberList := []string{
+		"https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
+	}
+	// Let's start by making everything one-of-a-kind so we don't scrape the same thing twice.
+	uniqueDomainsLists := makeUnique(domainsLists)
+	domainsLists = nil
+	uniquePhoneNumberList := makeUnique(phoneNumberList)
+	domainsLists = nil
+	// Disposable Domains
+	for _, content := range uniqueDomainsLists {
+		if validURL(content) {
+			scrapeWaitGroup.Add(1)
+			go findTheDomains(content, disposableDomains, disposableDomainsArray)
+		}
+	}
+	// Phone Numbers
+	for _, content := range uniquePhoneNumberList {
+		if validURL(content) {
+			scrapeWaitGroup.Add(1)
+			go findTheDomains(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
+		}
+	}
+	// Clear the memory via force.
+	debug.FreeOSMemory()
+	// We'll just wait for it to finish as a group.
+	scrapeWaitGroup.Wait()
+}
+
+func findTheDomains(url string, saveLocation string, returnContent []string) {
+	// Send a request to acquire all the information you need.
+	response, err := http.Get(url)
+	if err != nil {
+		log.Println(err)
+	}
+	// read all the content of the body.
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	// Examine the page's response code.
+	if response.StatusCode == 404 {
+		log.Println("Sorry, but we were unable to scrape the page you requested due to a 404 error.", url)
+	}
+	// Scraped data is read and appended to an array.
+	scanner := bufio.NewScanner(bytes.NewReader(body))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		returnContent = append(returnContent, scanner.Text())
+	}
+	// When you're finished, close the body.
+	response.Body.Close()
+	for _, content := range returnContent {
+		// Make sure the domain is at least 3 characters long
+		if len(content) > 1 {
+			// This is a list of all the domains discovered using the regex.
+			foundDomains := regexp.MustCompile(`(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]`).Find([]byte(content))
+			// all the emails from rejex
+			foundDomain := string(foundDomains)
+			if len(foundDomain) > 3 {
+				// Validate the entire list of domains.
+				if len(foundDomain) < 255 && checkIPAddress(foundDomain) && !strings.Contains(foundDomain, " ") && strings.Contains(foundDomain, ".") && !strings.Contains(foundDomain, "#") && !strings.Contains(foundDomain, "*") && !strings.Contains(foundDomain, "!") {
+					// icann.org confirms it's a public suffix domain
+					eTLD, icann := publicsuffix.PublicSuffix(foundDomain)
+					// Start the other tests if the domain has a valid suffix.
+					if icann || strings.IndexByte(eTLD, '.') >= 0 {
+						validationWaitGroup.Add(1)
+						// Go ahead and verify it in the background.
+						go validateTheDomains(foundDomain, saveLocation)
+					} else {
+						// Because we know it's not a legitimate suffix, it informs the user that the domain is invalid.
+						if showLogs {
+							log.Println("Invalid domain suffix:", foundDomain, url)
+						}
+					}
+				} else {
+					// Let the user know that the domain is invalid since it does not fit the syntax.
+					if showLogs {
+						log.Println("Invalid domain syntax:", foundDomain, url)
+					}
+				}
+			}
+		}
+	}
+	debug.FreeOSMemory()
+	scrapeWaitGroup.Done()
+	// While the validation is being performed, we wait.
+	validationWaitGroup.Wait()
+}
+
+func validateTheDomains(uniqueDomain string, locatioToSave string) {
+	// Validate each and every found domain.
+	if validateDomainViaLookupNS(uniqueDomain) || validateDomainViaLookupAddr(uniqueDomain) || validateDomainViaLookupIP(uniqueDomain) || validateDomainViaLookupCNAME(uniqueDomain) || validateDomainViaLookupMX(uniqueDomain) || validateDomainViaLookupTXT(uniqueDomain) || validateDomainViaLookupHost(uniqueDomain) || domainRegistration(uniqueDomain) || validateDomainViaHTTP(uniqueDomain) || validateDomainViaHTTPS(uniqueDomain) || validateApplicationViaHTTP(uniqueDomain) || validateApplicationViaHTTPS(uniqueDomain) {
+		// Maintain a list of all authorized domains.
+		writeToFile(locatioToSave, uniqueDomain)
+		if showLogs {
+			log.Println("Valid domain:", uniqueDomain)
+		}
+	} else {
+		// Let the users know if there are any issues while verifying the domain.
+		if showLogs {
+			log.Println("Error validating domain:", uniqueDomain)
+		}
+	}
+	// When it's finished, we'll be able to inform waitgroup that it's finished.
+	validationWaitGroup.Done()
+}
+
+// Take a list of domains and make them one-of-a-kind
+func makeUnique(randomStrings []string) []string {
+	flag := make(map[string]bool)
+	var uniqueString []string
+	for _, content := range randomStrings {
+		if !flag[content] {
+			flag[content] = true
+			uniqueString = append(uniqueString, content)
+		}
+	}
+	return uniqueString
+}
+
+// Using name servers, verify the domain.
+func validateDomainViaLookupNS(domain string) bool {
+	valid, _ := net.LookupNS(domain)
+	return len(valid) >= 1
+}
+
+// Using ip address, verify the domain.
+func validateDomainViaLookupIP(domain string) bool {
+	valid, _ := net.LookupIP(domain)
+	return len(valid) >= 1
+}
+
+// Using a lookup address, verify the domain.
+func validateDomainViaLookupAddr(domain string) bool {
+	valid, _ := net.LookupAddr(domain)
+	return len(valid) >= 1
+}
+
+// Using cname, verify the domain.
+func validateDomainViaLookupCNAME(domain string) bool {
+	valid, _ := net.LookupCNAME(domain)
+	return len(valid) >= 1
+}
+
+// mx records are used to validate the domain.
+func validateDomainViaLookupMX(domain string) bool {
+	valid, _ := net.LookupMX(domain)
+	return len(valid) >= 1
+}
+
+// Using txt records, validate the domain.
+func validateDomainViaLookupTXT(domain string) bool {
+	valid, _ := net.LookupTXT(domain)
+	return len(valid) >= 1
+}
+
+// Ping the server using http to see if anything is there.
+func validateDomainViaHTTP(domain string) bool {
+	pingThis := fmt.Sprint(domain + ":" + "80")
+	_, err := net.Dial("tcp", pingThis)
+	return err == nil
+}
+
+// Using https, ping the server and see if anything is there.
+func validateDomainViaHTTPS(domain string) bool {
+	pingThis := fmt.Sprint(domain + ":" + "443")
+	_, err := net.Dial("tcp", pingThis)
+	return err == nil
+}
+
+// To check if the website is up and functioning, send an HTTP request to it.
+func validateApplicationViaHTTP(domain string) bool {
+	httpValue := fmt.Sprint("http://" + domain)
+	_, err := http.Get(httpValue)
+	return err == nil
+}
+
+// Send a request to see if the program is running.
+func validateApplicationViaHTTPS(domain string) bool {
+	httpValue := fmt.Sprint("https://" + domain)
+	_, err := http.Get(httpValue)
+	return err == nil
+}
+
+// Using host, see if the domain is legitimate.
+func validateDomainViaLookupHost(domain string) bool {
+	valid, _ := net.LookupHost(domain)
+	return len(valid) >= 1
+}
+
+// Validate the domain by checking the domain registration.
+func domainRegistration(domain string) bool {
+	client := &rdap.Client{}
+	_, ok := client.QueryDomain(domain)
+	return ok == nil
+}
+
+// Make sure it's not an IP address.
+func checkIPAddress(ip string) bool {
+	return net.ParseIP(ip) == nil
+}
+
+// Verify the URI.
+func validURL(uri string) bool {
+	_, err = url.ParseRequestURI(uri)
+	return err == nil
+}
+
+// Check to see if a file already exists.
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// Remove a string from a slice
+func removeStringFromSlice(originalSlice []string, removeString string) []string {
+	// go though the array
+	for i, content := range originalSlice {
+		// if the array matches with the string, you remove it from the array
+		if content == removeString {
+			return append(originalSlice[:i], originalSlice[i+1:]...)
+		}
+	}
+	return originalSlice
+}
+
+// Save the information to a file.
+func writeToFile(pathInSystem string, content string) {
+	// open the file and if its not there create one.
+	filePath, err := os.OpenFile(pathInSystem, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	// write the content to the file
+	_, err = filePath.WriteString(content + "\n")
+	if err != nil {
+		log.Println(err)
+	}
+	// close the file
+	defer filePath.Close()
+}
+
+// Read and append to array
+func readAndAppend(fileLocation string, arrayName []string) []string {
+	file, err := os.Open(fileLocation)
+	if err != nil {
+		log.Println(err)
+	}
+	// scan the file, and read the file
 	scanner := bufio.NewScanner(file)
+	// split each line
+	scanner.Split(bufio.ScanLines)
+	// append each line to array
 	for scanner.Scan() {
-		out = append(out, scanner.Text())
+		arrayName = append(arrayName, scanner.Text())
 	}
-	_ = file.Close()
-	return out
+	// close the file before func ends
+	defer file.Close()
+	return arrayName
 }
 
-type typeURL struct {
-	URL  string
-	Type string
-}
-
-type downloadManager struct {
-	workers     int
-	emailOutput chan string
-}
-
-func newDownloaderManager(workers int) *downloadManager {
-	return &downloadManager{
-		workers:     workers,
-		emailOutput: make(chan string, 50),
+// Read the completed file, then delete any duplicates before saving it.
+func makeEverythingUnique(contentLocation string) {
+	var finalDomainList []string
+	finalDomainList = readAndAppend(contentLocation, finalDomainList)
+	// Make each domain one-of-a-kind.
+	uniqueDomains := makeUnique(finalDomainList)
+	// It is recommended that the array be deleted from memory.
+	finalDomainList = nil
+	// Sort the entire string.
+	sort.Strings(uniqueDomains)
+	// Remove all the exclusions domains from the list.
+	for _, content := range exclusionsDomainsArray {
+		uniqueDomains = removeStringFromSlice(uniqueDomains, content)
 	}
-}
-
-func (dm *downloadManager) Run(urls []typeURL) {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	urlsInput := make(chan typeURL, 10)
-	go func() {
-		for _, typeURL := range urls {
-			urlsInput <- typeURL
-			wg.Add(1)
-		}
-		wg.Done()
-	}()
-	for i := 0; i < dm.workers; i++ {
-		go func() {
-			for typeURL := range urlsInput {
-				var emails []string
-				switch typeURL.Type {
-				case "txt":
-					emails = downloadTextEmails(typeURL.URL)
-				case "json":
-					emails = downloadJSONEmails(typeURL.URL)
-				}
-				for _, email := range emails {
-					dm.emailOutput <- email
-				}
-				wg.Done()
-			}
-		}()
-	}
-	wg.Wait()
-}
-
-func (dm *downloadManager) Output() chan string {
-	return dm.emailOutput
-}
-
-func downloadTextEmails(url string) []string {
-	resp, err := client.Get(url)
+	// Delete the original file and rewrite it.
+	err = os.Remove(contentLocation)
 	if err != nil {
-		return make([]string, 0)
+		log.Println(err)
 	}
-	out := make([]string, 0)
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		out = append(out, scanner.Text())
+	// Begin composing the document
+	for _, content := range uniqueDomains {
+		writeToFile(contentLocation, content)
 	}
-	_ = resp.Body.Close()
-	return out
-}
-
-func downloadJSONEmails(url string) []string {
-	resp, err := client.Get(url)
-	if err != nil {
-		return make([]string, 0)
-	}
-	out := make([]string, 0)
-	_ = json.NewDecoder(resp.Body).Decode(&out)
-	return out
-}
-
-type processManager struct {
-	workers int
-	output  chan string
-}
-
-func newProcessManager(workers int) *processManager {
-	return &processManager{
-		workers: workers,
-		output:  make(chan string, 50),
-	}
-}
-
-func (pm *processManager) Run(input chan string) {
-	wg := sync.WaitGroup{}
-	wg.Add(pm.workers)
-	var mu sync.Mutex
-	visited := make(map[string]struct{})
-	for i := 0; i < pm.workers; i++ {
-		go func() {
-			for email := range input {
-				mu.Lock()
-				_, ok := visited[email]
-				if ok {
-					mu.Unlock()
-					continue
-				}
-				visited[email] = struct{}{}
-				mu.Unlock()
-				if validateDomain(email) {
-					pm.output <- email
-				}
-			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-}
-
-func (pm *processManager) Output() chan string {
-	return pm.output
-}
-
-func validateDomain(domain string) bool {
-	ns, _ := net.LookupNS(domain)
-	return len(ns) >= 1
-}
-
-type fileWriterManager struct{}
-
-func newfileWriterManager() *fileWriterManager {
-	return &fileWriterManager{}
-}
-
-func (pm *fileWriterManager) Run(input chan string) {
-	file, err := os.OpenFile(fileOutputName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for email := range input {
-			if !found(email, exclusion) {
-				_, err := file.WriteString(email + "\n")
-				if err != nil {
-					log.Println(email, err)
-				}
-			} else {
-				log.Println("Found ", email)
-			}
-		}
-		wg.Done()
-	}()
-	wg.Wait()
-	_ = file.Close()
-}
-
-func found(x string, a []string) bool {
-	i := sort.Search(len(a), func(i int) bool { return x <= a[i] })
-	if i < len(a) && a[i] == x {
-		return true
-	}
-	return false
-}
-
-var urls = []typeURL{
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
-		Type: "json",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/wildcard.json",
-		Type: "json",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/packetstream/disposable-email-domains/master/emails.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/andreis/disposable-email-domains/master/domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/di/disposable-email-domains/master/source_data/disposable_email_blocklist.conf",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/groundcat/disposable-email-domain-list/master/domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/abimaelmartell/goverify/master/list.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/maxmalysh/disposable-emails/master/disposable_emails/data/domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/Xyborg/disposable-burner-email-providers/master/disposable-domains.txt",
-		Type: "txt",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/pidario/disposable/master/list/index.json",
-		Type: "json",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
-		Type: "json",
-	},
-	{
-		URL:  "https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
-		Type: "txt",
-	},
+	// remove it from memory
+	uniqueDomains = nil
+	debug.FreeOSMemory()
 }
