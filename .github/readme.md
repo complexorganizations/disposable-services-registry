@@ -3,17 +3,17 @@
 Note: The current code is garbage and will be rewritten by July 9 2021
 
 ### Features:
-- Provides a list of disposable emails providers. (Validates [NS|MX] Records)
-- Provides a list of disposable phone numbers. (soon)
+- Provides a list of disposable emails providers.
+- Provides a list of disposable phone numbers.
 
 ### Lists:
 Domains:
 ```
-https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-domains.txt
+https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-domains
 ```
 Telephone numbers:
 ```
-https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-telephone-numbers.txt
+https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-telephone-numbers
 ```
 
 ### FAQ:
