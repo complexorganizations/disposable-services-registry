@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/nyaruka/phonenumbers"
 	"github.com/openrdap/rdap"
 	"golang.org/x/net/publicsuffix"
 )
@@ -36,7 +37,7 @@ var (
 	scrapeWaitGroup     sync.WaitGroup
 	validationWaitGroup sync.WaitGroup
 	// The user expresses his or her opinion on what should be done.
-	update   bool
+	update bool
 	// err stands for error.
 	err error
 )
@@ -117,14 +118,14 @@ func startScraping() {
 	for _, content := range uniqueDomainsLists {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go scrapeContent(content, disposableDomains, disposableDomainsArray)
+			go scrapeDomainContent(content, disposableDomains, disposableDomainsArray)
 		}
 	}
 	// Phone Numbers
 	for _, content := range uniquePhoneNumberList {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go scrapeContent(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
+			go scrapePhoneNumberContent(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
 		}
 	}
 	// Clear the memory via force.
@@ -133,7 +134,53 @@ func startScraping() {
 	scrapeWaitGroup.Wait()
 }
 
-func scrapeContent(url string, saveLocation string, returnContent []string) {
+// Phone numbers
+func scrapePhoneNumberContent(url string, saveLocation string, returnContent []string) {
+	// Send a request to acquire all the information you need.
+	response, err := http.Get(url)
+	if err != nil {
+		log.Println(err)
+	}
+	// read all the content of the body.
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	// Examine the page's response code.
+	if response.StatusCode == 404 {
+		log.Println("Sorry, but we were unable to scrape the page you requested due to a 404 error.", url)
+	}
+	// Scraped data is read and appended to an array.
+	scanner := bufio.NewScanner(bytes.NewReader(body))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		returnContent = append(returnContent, scanner.Text())
+	}
+	// When you're finished, close the body.
+	response.Body.Close()
+	for _, content := range returnContent {
+		// Make sure the domain is at least 3 characters long
+		if len(content) > 1 {
+			// This is a list of all the phone numbers discovered using the regex.
+			phoneNumbers := regexp.MustCompile(`(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]`).Find([]byte(content))
+			// all the emails from rejex
+			phoneNumber := string(phoneNumbers)
+			if len(phoneNumber) > 3 {
+				// Validate the entire list of domains.
+				if len(phoneNumber) < 255 && !strings.Contains(phoneNumber, " ") && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
+					// validate the phone number and than save the phone number.
+				}
+			}
+		}
+	}
+	debug.FreeOSMemory()
+	scrapeWaitGroup.Done()
+	// While the validation is being performed, we wait.
+	validationWaitGroup.Wait()
+}
+
+// domains stuff
+func scrapeDomainContent(url string, saveLocation string, returnContent []string) {
 	// Send a request to acquire all the information you need.
 	response, err := http.Get(url)
 	if err != nil {
