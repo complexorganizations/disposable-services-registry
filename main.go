@@ -17,7 +17,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/nyaruka/phonenumbers"
+	//"github.com/nyaruka/phonenumbers"
 	"github.com/openrdap/rdap"
 	"golang.org/x/net/publicsuffix"
 )
@@ -167,7 +167,7 @@ func scrapePhoneNumberContent(url string, saveLocation string, returnContent []s
 			phoneNumber := string(phoneNumbers)
 			if len(phoneNumber) > 3 {
 				// Validate the entire list of domains.
-				if len(phoneNumber) < 50 && !strings.Contains(phoneNumber, " ") && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
+				if len(phoneNumber) < 50 && !strings.Contains(phoneNumber, " ") && notValidateCharacters(phoneNumber) && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
 					// validate the phone number and than save the phone number.
 				}
 			}
@@ -396,6 +396,17 @@ func readAndAppend(fileLocation string, arrayName []string) []string {
 	// close the file before func ends
 	defer file.Close()
 	return arrayName
+}
+
+// Make sure the value doesn't contain any characters that aren't allowed.
+func notValidateCharacters(value string) bool {
+	completeRange := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
+	for _, content := range completeRange {
+		if strings.Contains(value, content) {
+			return true
+		}
+	}
+	return false
 }
 
 // Read the completed file, then delete any duplicates before saving it.
