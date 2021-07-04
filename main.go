@@ -167,7 +167,7 @@ func scrapePhoneNumberContent(url string, saveLocation string, returnContent []s
 			phoneNumber := string(phoneNumbers)
 			if len(phoneNumber) > 3 {
 				// Validate the entire list of domains.
-				if len(phoneNumber) < 255 && !strings.Contains(phoneNumber, " ") && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
+				if len(phoneNumber) < 50 && !strings.Contains(phoneNumber, " ") && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
 					// validate the phone number and than save the phone number.
 				}
 			}
