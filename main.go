@@ -162,7 +162,7 @@ func scrapePhoneNumberContent(url string, saveLocation string, returnContent []s
 		// Make sure the domain is at least 3 characters long
 		if len(content) > 1 {
 			// This is a list of all the phone numbers discovered using the regex.
-			phoneNumbers := regexp.MustCompile(`(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]`).Find([]byte(content))
+			phoneNumbers := regexp.MustCompile(``).Find([]byte(content))
 			// all the emails from rejex
 			phoneNumber := string(phoneNumbers)
 			if len(phoneNumber) > 3 {
