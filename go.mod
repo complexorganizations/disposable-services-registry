@@ -1,4 +1,4 @@
-module github.com/complexorganizations/disposable-services
+module github.com/complexorganizations/disposable-services-registry
 
 go 1.16
 
