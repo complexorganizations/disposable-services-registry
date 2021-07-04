@@ -36,7 +36,6 @@ var (
 	scrapeWaitGroup     sync.WaitGroup
 	validationWaitGroup sync.WaitGroup
 	// The user expresses his or her opinion on what should be done.
-	showLogs bool
 	update   bool
 	// err stands for error.
 	err error
@@ -46,10 +45,8 @@ func init() {
 	// If any user input flags are provided, use them.
 	if len(os.Args) > 1 {
 		tempUpdate := flag.Bool("update", false, "Make any necessary changes to the listings.")
-		tempLog := flag.Bool("logs", false, "Check the weather before deciding whether or not to display logs.")
 		flag.Parse()
 		update = *tempUpdate
-		showLogs = *tempLog
 	} else {
 		os.Exit(0)
 	}
@@ -120,14 +117,14 @@ func startScraping() {
 	for _, content := range uniqueDomainsLists {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go findTheDomains(content, disposableDomains, disposableDomainsArray)
+			go scrapeContent(content, disposableDomains, disposableDomainsArray)
 		}
 	}
 	// Phone Numbers
 	for _, content := range uniquePhoneNumberList {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go findTheDomains(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
+			go scrapeContent(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
 		}
 	}
 	// Clear the memory via force.
@@ -136,7 +133,7 @@ func startScraping() {
 	scrapeWaitGroup.Wait()
 }
 
-func findTheDomains(url string, saveLocation string, returnContent []string) {
+func scrapeContent(url string, saveLocation string, returnContent []string) {
 	// Send a request to acquire all the information you need.
 	response, err := http.Get(url)
 	if err != nil {
@@ -176,16 +173,6 @@ func findTheDomains(url string, saveLocation string, returnContent []string) {
 						validationWaitGroup.Add(1)
 						// Go ahead and verify it in the background.
 						go validateTheDomains(foundDomain, saveLocation)
-					} else {
-						// Because we know it's not a legitimate suffix, it informs the user that the domain is invalid.
-						if showLogs {
-							log.Println("Invalid domain suffix:", foundDomain, url)
-						}
-					}
-				} else {
-					// Let the user know that the domain is invalid since it does not fit the syntax.
-					if showLogs {
-						log.Println("Invalid domain syntax:", foundDomain, url)
 					}
 				}
 			}
@@ -202,14 +189,6 @@ func validateTheDomains(uniqueDomain string, locatioToSave string) {
 	if validateDomainViaLookupNS(uniqueDomain) || validateDomainViaLookupAddr(uniqueDomain) || validateDomainViaLookupIP(uniqueDomain) || validateDomainViaLookupCNAME(uniqueDomain) || validateDomainViaLookupMX(uniqueDomain) || validateDomainViaLookupTXT(uniqueDomain) || validateDomainViaLookupHost(uniqueDomain) || domainRegistration(uniqueDomain) || validateDomainViaHTTP(uniqueDomain) || validateDomainViaHTTPS(uniqueDomain) || validateApplicationViaHTTP(uniqueDomain) || validateApplicationViaHTTPS(uniqueDomain) {
 		// Maintain a list of all authorized domains.
 		writeToFile(locatioToSave, uniqueDomain)
-		if showLogs {
-			log.Println("Valid domain:", uniqueDomain)
-		}
-	} else {
-		// Let the users know if there are any issues while verifying the domain.
-		if showLogs {
-			log.Println("Error validating domain:", uniqueDomain)
-		}
 	}
 	// When it's finished, we'll be able to inform waitgroup that it's finished.
 	validationWaitGroup.Done()
