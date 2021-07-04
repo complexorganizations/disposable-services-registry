@@ -411,17 +411,25 @@ func notValidateCharacters(value string) bool {
 
 // Read the completed file, then delete any duplicates before saving it.
 func makeEverythingUnique(contentLocation string) {
-	var finalDomainList []string
-	finalDomainList = readAndAppend(contentLocation, finalDomainList)
+	var finalContentList []string
+	finalContentList = readAndAppend(contentLocation, finalContentList)
 	// Make each domain one-of-a-kind.
-	uniqueDomains := makeUnique(finalDomainList)
+	uniqueContent := makeUnique(finalContentList)
 	// It is recommended that the array be deleted from memory.
-	finalDomainList = nil
+	finalContentList = nil
 	// Sort the entire string.
-	sort.Strings(uniqueDomains)
+	sort.Strings(uniqueContent)
 	// Remove all the exclusions domains from the list.
-	for _, content := range exclusionsDomainsArray {
-		uniqueDomains = removeStringFromSlice(uniqueDomains, content)
+	if contentLocation == disposableDomains {
+		for _, content := range exclusionsDomainsArray {
+			uniqueContent = removeStringFromSlice(uniqueContent, content)
+		}
+	}
+	// Remove all the exclusions phone numbers from the list.
+	if contentLocation == disposableTelephoneNumbers {
+		for _, content := range exclusionsTelephoneNumbersArray {
+			uniqueContent = removeStringFromSlice(uniqueContent, content)
+		}
 	}
 	// Delete the original file and rewrite it.
 	err = os.Remove(contentLocation)
@@ -429,10 +437,10 @@ func makeEverythingUnique(contentLocation string) {
 		log.Println(err)
 	}
 	// Begin composing the document
-	for _, content := range uniqueDomains {
+	for _, content := range uniqueContent {
 		writeToFile(contentLocation, content)
 	}
 	// remove it from memory
-	uniqueDomains = nil
+	uniqueContent = nil
 	debug.FreeOSMemory()
 }
