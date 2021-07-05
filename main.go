@@ -107,7 +107,7 @@ func startScraping() {
 	}
 	// Phone Numbers
 	phoneNumberList := []string{
-		"https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
+		"https://raw.githubusercontent.com/iP1SMS/disposable-phone-numbers/master/number-list.json",
 	}
 	// Let's start by making everything one-of-a-kind so we don't scrape the same thing twice.
 	uniqueDomainsLists := makeUnique(domainsLists)
@@ -162,7 +162,7 @@ func scrapePhoneNumberContent(url string, saveLocation string, returnContent []s
 		// Make sure the domain is at least 3 characters long
 		if len(content) > 1 {
 			// This is a list of all the phone numbers discovered using the regex.
-			phoneNumbers := regexp.MustCompile(``).Find([]byte(content))
+			phoneNumbers := regexp.MustCompile(`\(?\b([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})\b`).Find([]byte(content))
 			// all the emails from rejex
 			phoneNumber := string(phoneNumbers)
 			if len(phoneNumber) > 3 {
