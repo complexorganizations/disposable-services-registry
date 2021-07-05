@@ -36,6 +36,7 @@ var (
 	// Go routines using waitgrops.
 	scrapeWaitGroup     sync.WaitGroup
 	validationWaitGroup sync.WaitGroup
+	uniqueWaitGroup     sync.WaitGroup
 	// The user expresses his or her opinion on what should be done.
 	update bool
 	// err stands for error.
@@ -81,8 +82,10 @@ func main() {
 		// Scrape all of the domains and save them afterwards.
 		startScraping()
 		// We'll make everything distinctive once everything is finished.
-		makeEverythingUnique(disposableDomains)
-		makeEverythingUnique(disposableTelephoneNumbers)
+		uniqueWaitGroup.Add(2)
+		go makeEverythingUnique(disposableDomains)
+		go makeEverythingUnique(disposableTelephoneNumbers)
+		uniqueWaitGroup.Wait()
 	}
 }
 
@@ -165,10 +168,12 @@ func scrapePhoneNumberContent(url string, saveLocation string, returnContent []s
 			phoneNumbers := regexp.MustCompile(`\(?\b([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})\b`).Find([]byte(content))
 			// all the emails from rejex
 			phoneNumber := string(phoneNumbers)
-			if len(phoneNumber) > 3 {
+			if len(phoneNumber) >= 3 {
 				// Validate the entire list of domains.
 				if len(phoneNumber) < 50 && !strings.Contains(phoneNumber, " ") && notValidateCharacters(phoneNumber) && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
 					// validate the phone number and than save the phone number.
+					validationWaitGroup.Add(1)
+					go validateThePhoneNumbers(phoneNumber, disposableTelephoneNumbers)
 				}
 			}
 		}
@@ -238,6 +243,11 @@ func validateTheDomains(uniqueDomain string, locatioToSave string) {
 		writeToFile(locatioToSave, uniqueDomain)
 	}
 	// When it's finished, we'll be able to inform waitgroup that it's finished.
+	validationWaitGroup.Done()
+}
+
+func validateThePhoneNumbers(phoneNumber string, locatioToSave string) {
+	writeToFile(locatioToSave, phoneNumber)
 	validationWaitGroup.Done()
 }
 
@@ -443,4 +453,5 @@ func makeEverythingUnique(contentLocation string) {
 	// remove it from memory
 	uniqueContent = nil
 	debug.FreeOSMemory()
+	uniqueWaitGroup.Done()
 }
