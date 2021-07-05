@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 
+	//"github.com/nyaruka/phonenumbers"
 	"github.com/openrdap/rdap"
 	"golang.org/x/net/publicsuffix"
 )
@@ -36,7 +37,7 @@ var (
 	scrapeWaitGroup     sync.WaitGroup
 	validationWaitGroup sync.WaitGroup
 	// The user expresses his or her opinion on what should be done.
-	update   bool
+	update bool
 	// err stands for error.
 	err error
 )
@@ -106,7 +107,7 @@ func startScraping() {
 	}
 	// Phone Numbers
 	phoneNumberList := []string{
-		"https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/denyDomains.txt",
+		"https://raw.githubusercontent.com/iP1SMS/disposable-phone-numbers/master/number-list.json",
 	}
 	// Let's start by making everything one-of-a-kind so we don't scrape the same thing twice.
 	uniqueDomainsLists := makeUnique(domainsLists)
@@ -117,14 +118,14 @@ func startScraping() {
 	for _, content := range uniqueDomainsLists {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go scrapeContent(content, disposableDomains, disposableDomainsArray)
+			go scrapeDomainContent(content, disposableDomains, disposableDomainsArray)
 		}
 	}
 	// Phone Numbers
 	for _, content := range uniquePhoneNumberList {
 		if validURL(content) {
 			scrapeWaitGroup.Add(1)
-			go scrapeContent(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
+			go scrapePhoneNumberContent(content, disposableTelephoneNumbers, disposableTelephoneNumbersArray)
 		}
 	}
 	// Clear the memory via force.
@@ -133,7 +134,53 @@ func startScraping() {
 	scrapeWaitGroup.Wait()
 }
 
-func scrapeContent(url string, saveLocation string, returnContent []string) {
+// Phone numbers
+func scrapePhoneNumberContent(url string, saveLocation string, returnContent []string) {
+	// Send a request to acquire all the information you need.
+	response, err := http.Get(url)
+	if err != nil {
+		log.Println(err)
+	}
+	// read all the content of the body.
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	// Examine the page's response code.
+	if response.StatusCode == 404 {
+		log.Println("Sorry, but we were unable to scrape the page you requested due to a 404 error.", url)
+	}
+	// Scraped data is read and appended to an array.
+	scanner := bufio.NewScanner(bytes.NewReader(body))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		returnContent = append(returnContent, scanner.Text())
+	}
+	// When you're finished, close the body.
+	response.Body.Close()
+	for _, content := range returnContent {
+		// Make sure the domain is at least 3 characters long
+		if len(content) > 1 {
+			// This is a list of all the phone numbers discovered using the regex.
+			phoneNumbers := regexp.MustCompile(`\(?\b([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})\b`).Find([]byte(content))
+			// all the emails from rejex
+			phoneNumber := string(phoneNumbers)
+			if len(phoneNumber) > 3 {
+				// Validate the entire list of domains.
+				if len(phoneNumber) < 50 && !strings.Contains(phoneNumber, " ") && notValidateCharacters(phoneNumber) && strings.Contains(phoneNumber, ".") && !strings.Contains(phoneNumber, "#") && !strings.Contains(phoneNumber, "*") && !strings.Contains(phoneNumber, "!") {
+					// validate the phone number and than save the phone number.
+				}
+			}
+		}
+	}
+	debug.FreeOSMemory()
+	scrapeWaitGroup.Done()
+	// While the validation is being performed, we wait.
+	validationWaitGroup.Wait()
+}
+
+// domains stuff
+func scrapeDomainContent(url string, saveLocation string, returnContent []string) {
 	// Send a request to acquire all the information you need.
 	response, err := http.Get(url)
 	if err != nil {
@@ -351,19 +398,38 @@ func readAndAppend(fileLocation string, arrayName []string) []string {
 	return arrayName
 }
 
+// Make sure the value doesn't contain any characters that aren't allowed.
+func notValidateCharacters(value string) bool {
+	completeRange := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
+	for _, content := range completeRange {
+		if strings.Contains(value, content) {
+			return true
+		}
+	}
+	return false
+}
+
 // Read the completed file, then delete any duplicates before saving it.
 func makeEverythingUnique(contentLocation string) {
-	var finalDomainList []string
-	finalDomainList = readAndAppend(contentLocation, finalDomainList)
+	var finalContentList []string
+	finalContentList = readAndAppend(contentLocation, finalContentList)
 	// Make each domain one-of-a-kind.
-	uniqueDomains := makeUnique(finalDomainList)
+	uniqueContent := makeUnique(finalContentList)
 	// It is recommended that the array be deleted from memory.
-	finalDomainList = nil
+	finalContentList = nil
 	// Sort the entire string.
-	sort.Strings(uniqueDomains)
+	sort.Strings(uniqueContent)
 	// Remove all the exclusions domains from the list.
-	for _, content := range exclusionsDomainsArray {
-		uniqueDomains = removeStringFromSlice(uniqueDomains, content)
+	if contentLocation == disposableDomains {
+		for _, content := range exclusionsDomainsArray {
+			uniqueContent = removeStringFromSlice(uniqueContent, content)
+		}
+	}
+	// Remove all the exclusions phone numbers from the list.
+	if contentLocation == disposableTelephoneNumbers {
+		for _, content := range exclusionsTelephoneNumbersArray {
+			uniqueContent = removeStringFromSlice(uniqueContent, content)
+		}
 	}
 	// Delete the original file and rewrite it.
 	err = os.Remove(contentLocation)
@@ -371,10 +437,10 @@ func makeEverythingUnique(contentLocation string) {
 		log.Println(err)
 	}
 	// Begin composing the document
-	for _, content := range uniqueDomains {
+	for _, content := range uniqueContent {
 		writeToFile(contentLocation, content)
 	}
 	// remove it from memory
-	uniqueDomains = nil
+	uniqueContent = nil
 	debug.FreeOSMemory()
 }

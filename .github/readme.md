@@ -54,11 +54,10 @@ Refresh the lists and make a new one
   ./disposable-services-registry -update
 ```
 
+
 ## Roadmap
 
-- Additional browser support
-
-- Add more integrations
+- Make it better by adding additional listings.
 
 
 ## Feedback
