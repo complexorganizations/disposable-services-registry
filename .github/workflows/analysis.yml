@@ -8,7 +8,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
       - name: Get the current version of Go from project.
-        run: setx GITHUB_ENV type go.mod | select -Skip 2 -First 1 | %{ 'GO_VERSION_FROM_PROJECT={0}' -f ($_ -replace '^.+\s') }
+        run: setx GITHUB_ENV type go.mod | select -Skip 2 -First 1 | %{ 'GO_VERSION_FROM_PROJECT={0}' -f ($_ -replace '^.+\s') } /M
       - name: Set up Go version "${{ env.GO_VERSION_FROM_PROJECT }}"
         uses: actions/setup-go@v2
         with:
