@@ -8,11 +8,11 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
       - name: Get the current version of Go from project.
-        run: $Env:GO_VERSION_FROM_PROJECT=type go.mod | select -first 3 | select -last 1 | %{ $_ -split ' ' } | select -last 1
-      - name: Set up Go version "${{ env:GO_VERSION_FROM_PROJECT }}"
+        run: $Env:GITHUB_ENV=type go.mod | select -first 3 | select -last 1 | %{ $_ -split ' ' } | select -last 1
+      - name: Set up Go version "${{ env.GO_VERSION_FROM_PROJECT }}"
         uses: actions/setup-go@v2
         with:
-          go-version: "${{ env:GO_VERSION_FROM_PROJECT }}"
+          go-version: "${{ env.GO_VERSION_FROM_PROJECT }}"
         id: go
       - name: Get dependencies
         run: go get .
