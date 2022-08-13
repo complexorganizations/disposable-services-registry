@@ -1,6 +1,6 @@
 module github.com/complexorganizations/disposable-services-registry
 
-go 1.18
+go 1.19
 
 require (
 	github.com/nyaruka/phonenumbers v1.1.0
