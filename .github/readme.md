@@ -27,33 +27,6 @@ The lists are updated on a daily basis using github actions.
 
 To add a new list, please send a PR; in case you're wondering, all lists must be public in order to be scraped.
 
-## Manually update the lists
-
-Duplicate the project.
-
-```bash
-git clone https://github.com/complexorganizations/disposable-services-registry
-```
-
-Go to the project directory
-
-```bash
-cd disposable-services-registry
-```
-
-Install the required dependencies and compile the code
-
-```bash
-go build .
-```
-
-Refresh the lists and make a new one
-
-```bash
-./disposable-services-registry -update
-```
-
-
 ## Roadmap
 
 - Make it better by adding additional listings.
@@ -77,7 +50,6 @@ Open Source Community
 ## License
 
 [Apache License Version 2.0](https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/.github/license)
-
 
 ## Used By
 
