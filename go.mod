@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/nyaruka/phonenumbers v1.1.6
-	golang.org/x/net v0.9.0
+	golang.org/x/net v0.10.0
 )
 
 require (
