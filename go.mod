@@ -3,7 +3,7 @@ module github.com/complexorganizations/disposable-services-registry
 go 1.19
 
 require (
-	github.com/nyaruka/phonenumbers v1.1.6
+	github.com/nyaruka/phonenumbers v1.1.7
 	golang.org/x/net v0.10.0
 )
 
