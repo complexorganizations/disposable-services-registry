@@ -11,10 +11,10 @@ A register of transient disposable services.
 
 #### Get all items
 
-| Name | GitHub | GitLab |
-| :--- |  :---- | :----- |
-| **Domains** | `https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-domains` | `replace-this-here` |
-|  **Telephone numbers** | `https://raw.githubusercontent.com/complexorganizations/disposable-services-registry/main/assets/disposable-telephone-numbers` | `and replace this here.` |
+| Name                  | GitHub                                                                                             | GitLab                  | Statically                                                                                        | jsDelivr                                                                                  | Combinatronics.io                                                                                     |
+| :-------------------- | :------------------------------------------------------------------------------------------------- | :---------------------- | :------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
+| **Domains**           | [GitHub](https://raw.githubusercontent.com/complexorganizations/content-blocker/main/assets/hosts) | `replace-this-here`     | [Statically](https://cdn.statically.io/gh/complexorganizations/content-blocker/main/assets/hosts) | [jsDelivr](https://cdn.jsdelivr.net/gh/complexorganizations/content-blocker/assets/hosts) | [Combinatronics.io](https://combinatronics.io/complexorganizations/content-blocker/main/assets/hosts) |
+| **Telephone numbers** | [GitHub](https://raw.githubusercontent.com/complexorganizations/content-blocker/main/assets/hosts) | `and-replace-this-here` | [Statically](https://cdn.statically.io/gh/complexorganizations/content-blocker/main/assets/hosts) | [jsDelivr](https://cdn.jsdelivr.net/gh/complexorganizations/content-blocker/assets/hosts) | [Combinatronics.io](https://combinatronics.io/complexorganizations/content-blocker/main/assets/hosts) |
 
 
 ## FAQ
