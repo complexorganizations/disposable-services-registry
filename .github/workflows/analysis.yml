@@ -31,4 +31,4 @@ jobs:
         run: go build .
 
       - name: Run Build Process
-        run: ./disposable-services-registry.exe
+        run: ./disposable-services-registry.exe -help
