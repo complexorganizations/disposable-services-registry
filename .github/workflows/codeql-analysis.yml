@@ -1,17 +1,28 @@
-name: "CodeQL"
+name: "Advanced CodeQL Analysis"
 on: [push, pull_request]
 jobs:
-  analyse:
-    name: Analyse
+  code_analysis:
+    name: Code Analysis
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
+    - name: Retrieve Repository
       uses: actions/checkout@v4
+
+    - name: Cache CodeQL Databases
+      uses: actions/cache@v3
+      with:
+        path: ~/.codeql
+        key: ${{ runner.os }}-codeql-${{ hashFiles('**/*.go') }}
+        restore-keys: |
+          ${{ runner.os }}-codeql-
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: go
-    - name: Autobuild
+
+    - name: Autobuild Go Project
       uses: github/codeql-action/autobuild@v3
-    - name: Perform CodeQL Analysis
+
+    - name: Execute CodeQL Analysis
       uses: github/codeql-action/analyze@v3
