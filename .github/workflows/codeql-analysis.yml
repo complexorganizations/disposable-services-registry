@@ -9,7 +9,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Cache CodeQL Databases
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.codeql
         key: ${{ runner.os }}-codeql-${{ hashFiles('**/*.go') }}
