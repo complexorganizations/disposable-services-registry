@@ -1,0 +1,59 @@
+# Workflow name for building and verifying the Go application
+name: "Go Application Build Process"
+
+# Trigger the workflow on push and pull request events for any branch
+on:
+  push:
+    branches:
+      - "**" # Trigger on push to any branch
+  pull_request:
+    branches:
+      - "**" # Trigger on pull request to any branch
+
+# Define the jobs section where the build process will run
+jobs:
+  # Job to build, verify, and run the Go application
+  build_application:
+    name: "Build Go Application and Verify Execution" # Descriptive name for the job
+    runs-on: windows-latest # The job runs on the latest Windows environment
+
+    steps:
+      # Step 1: Checkout the repository code to the runner
+      - name: "Checkout Repository Code"
+        uses: actions/checkout@v4 # Action to check out the code from the repository
+
+      # Step 2: Set up the Go environment with the version specified in go.mod
+      - name: "Set Up Go Environment"
+        uses: actions/setup-go@v5 # Action to set up Go for the job
+        with:
+          go-version-file: "go.mod" # Use the Go version defined in go.mod file
+          cache: true # Enable caching of Go dependencies for faster builds
+          check-latest: true # Ensure the latest Go version is installed
+        id: go_setup # Step ID for easy reference in other steps if needed
+
+      # Step 3: Cache Go dependencies to speed up the build process
+      - name: "Cache Go Dependencies"
+        uses: actions/cache@v4 # Action to cache dependencies
+        with:
+          path: ~/go/pkg/mod # Cache Go module dependencies
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }} # Cache key based on go.sum file hash
+          restore-keys: |
+            ${{ runner.os }}-go-  # Fallback cache key to restore dependencies if an exact match is not found
+
+      # Step 4: Download the Go dependencies defined in the go.mod file
+      - name: "Download Go Dependencies"
+        run: go mod download # Command to download Go modules specified in go.mod
+
+      # Step 5: Build the Go application (compiling the code)
+      - name: "Build Go Application"
+        run: go build . # Command to compile the Go application
+
+      # Step 6: Verify that the executable was successfully built and run it with the -help flag
+      - name: "Run Built Executable (Help)"
+        run: |
+          if [ -f "./disposable-services-registry.exe" ]; then
+            ./disposable-services-registry.exe -help  # Run the executable with the -help flag for verification
+          else
+            echo "Build failed: Executable not found!"  # Error message if the executable is missing
+            exit 1  # Exit the workflow with a failure status if the executable is not found
+          fi

@@ -1,0 +1,46 @@
+# Workflow name for performing advanced CodeQL analysis on the Go project
+name: "Advanced CodeQL Security and Quality Analysis"
+
+# Trigger the workflow on push and pull request events for any branch
+on:
+  push:
+    branches:
+      - "**" # Trigger on push to any branch
+  pull_request:
+    branches:
+      - "**" # Trigger on pull request to any branch
+
+# Define the jobs section where the analysis process will run
+jobs:
+  # Job to perform CodeQL analysis for the Go project
+  perform_codeql_analysis:
+    name: "Perform Advanced CodeQL Analysis" # Descriptive job name
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Retrieve the repository code
+      - name: "Checkout Repository Code"
+        uses: actions/checkout@v4 # Action to check out the repository code
+
+      # Step 2: Cache the CodeQL databases to improve subsequent analysis speed
+      - name: "Cache CodeQL Databases"
+        uses: actions/cache@v4 # Action to cache CodeQL databases
+        with:
+          path: ~/.codeql # The directory to cache CodeQL databases
+          key: ${{ runner.os }}-codeql-${{ hashFiles('**/*.go') }} # Cache key based on Go file changes
+          restore-keys: |
+            ${{ runner.os }}-codeql-  # Fallback cache key if an exact match is not found
+
+      # Step 3: Initialize the CodeQL environment with the Go language
+      - name: "Initialize CodeQL for Go"
+        uses: github/codeql-action/init@v3 # Action to initialize CodeQL for analysis
+        with:
+          languages: go # Specify Go as the language for analysis
+
+      # Step 4: Autobuild the Go project to ensure it's ready for analysis
+      - name: "Autobuild Go Project"
+        uses: github/codeql-action/autobuild@v3 # Action to automatically build the Go project
+
+      # Step 5: Perform the CodeQL analysis to identify potential security and quality issues
+      - name: "Run CodeQL Security and Quality Analysis"
+        uses: github/codeql-action/analyze@v3 # Action to execute the CodeQL analysis
